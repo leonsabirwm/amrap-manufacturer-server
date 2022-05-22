@@ -24,7 +24,7 @@ async function run() {
     const userCollection = client.db('amrap').collection('users');
     const partCollection = client.db('amrap').collection('parts');
     const orderCollection = client.db('amrap').collection('orders');
-    const revoewCollection = client.db('amrap').collection('reviews');
+    const reviewCollection = client.db('amrap').collection('reviews');
 
 
     app.get("/parts",async(req,res)=>{
@@ -46,10 +46,14 @@ async function run() {
     })
     app.post('/reviews',async(req,res)=>{
         const review = req.body;
-        console.log(review);
-        const result = await revoewCollection.insertOne(review);
+        const result = await reviewCollection.insertOne(review);
         res.send(result);
 
+    })
+    app.get('/reviews',async(req,res)=>{
+        const cursor = reviewCollection.find({});
+        const result = await cursor.toArray();
+        res.send(result);
     })
     app.get('/orders/:email',async(req,res)=>{
         const email = req.params.email;
@@ -57,6 +61,13 @@ async function run() {
         const cursor = orderCollection.find(query);
         const result = await cursor.toArray();
         res.send(result);
+    })
+    app.delete('/orders/:id',async(req,res)=>{
+        const id = req.params.id;
+        const filter = {_id : ObjectId(id)};
+        const result = await orderCollection.deleteOne(filter);
+        res.send(result);
+
     })
     app.patch('/orders/:id',async(req,res)=>{
         const id = req.params.id;
@@ -84,6 +95,29 @@ async function run() {
         const result =await userCollection.updateOne(filter,updateDoc,options)
         const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
         res.send({result,token});
+    })
+    app.put('/users/update/:email',async(req,res)=>{
+        const email = req.params.email;
+        const filter = {email:email};
+        const options = {upsert : true};
+        const updation = req.body;
+        console.log(updation);
+        const updateDoc = {
+            $set:{
+                
+                phone: updation.phone,
+                address: updation.address,
+                linkdin: updation.linkdin,
+                education: updation.education
+            }
+        }
+        const result =await userCollection.updateOne(filter,updateDoc,options)
+        res.send(result);
+    })
+    app.get('/users/:email',async(req,res)=>{
+        const filter ={email:req.params.email};
+        const result =await userCollection.findOne(filter);
+        res.send(result);
     })
 
     
