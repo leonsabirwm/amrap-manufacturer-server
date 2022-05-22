@@ -24,6 +24,7 @@ async function run() {
     const userCollection = client.db('amrap').collection('users');
     const partCollection = client.db('amrap').collection('parts');
     const orderCollection = client.db('amrap').collection('orders');
+    const revoewCollection = client.db('amrap').collection('reviews');
 
 
     app.get("/parts",async(req,res)=>{
@@ -41,6 +42,20 @@ async function run() {
     app.post('/orders',async(req,res)=>{
         const order = req.body;
         const result =await orderCollection.insertOne(order)
+        res.send(result);
+    })
+    app.post('/reviews',async(req,res)=>{
+        const review = req.body;
+        console.log(review);
+        const result = await revoewCollection.insertOne(review);
+        res.send(result);
+
+    })
+    app.get('/orders/:email',async(req,res)=>{
+        const email = req.params.email;
+        const query = {email:email};
+        const cursor = orderCollection.find(query);
+        const result = await cursor.toArray();
         res.send(result);
     })
     app.patch('/orders/:id',async(req,res)=>{
