@@ -26,7 +26,11 @@ async function run() {
     const orderCollection = client.db('amrap').collection('orders');
     const reviewCollection = client.db('amrap').collection('reviews');
 
-
+    app.post("/parts",async(req,res)=>{
+        const product = req.body;
+        const result = await partCollection.insertOne(product);
+        res.send(result);
+    })
     app.get("/parts",async(req,res)=>{
         const query = req.query;
         const cursor = partCollection.find(query);
@@ -82,21 +86,41 @@ async function run() {
         res.send(result)
 
     })
+    app.get('/users',async(req,res)=>{
+        const cursor = userCollection.find({});
+        const result = await cursor.toArray();
+        res.send(result);
+    })
 
     app.put('/user/:email',async(req,res)=>{
         const email = req.params.email;
         const filter = {email:email};
+        const name = req.body;
+        console.log(name);
         const options = {upsert : true};
         const updateDoc = {
             $set:{
-                email:email
+                email:email,
+                name:name.name
             }
         }
         const result =await userCollection.updateOne(filter,updateDoc,options)
         const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
         res.send({result,token});
     })
-    app.put('/users/update/:email',async(req,res)=>{
+    app.put("/user/admin/:email",async(req,res)=>{
+        const email = req.params.email;
+        const filter = {email : email};
+        const option = {upsert:true}
+        const updateDoc = {
+            $set:{
+                role:"admin"
+            }
+        }
+        const result = await userCollection.updateOne(filter,updateDoc,option);
+        res.send(result);
+    })
+    app.patch('/users/update/:email',async(req,res)=>{
         const email = req.params.email;
         const filter = {email:email};
         const options = {upsert : true};
@@ -104,7 +128,6 @@ async function run() {
         console.log(updation);
         const updateDoc = {
             $set:{
-                
                 phone: updation.phone,
                 address: updation.address,
                 linkdin: updation.linkdin,
@@ -117,6 +140,7 @@ async function run() {
     app.get('/users/:email',async(req,res)=>{
         const filter ={email:req.params.email};
         const result =await userCollection.findOne(filter);
+        // console.log(result);
         res.send(result);
     })
 
