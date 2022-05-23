@@ -26,15 +26,35 @@ async function run() {
     const orderCollection = client.db('amrap').collection('orders');
     const reviewCollection = client.db('amrap').collection('reviews');
 
+
+    app.get('/admin/:email',async(req,res)=>{
+        const email = req.params.email;
+        const filter = {email:email};
+        const user = await userCollection.findOne(filter);
+        if(user.role==="admin"){
+            res.send({admin:true});
+        }
+        else{
+            res.send({admin:false});
+        }
+        console.log(user);
+    })
     app.post("/parts",async(req,res)=>{
         const product = req.body;
         const result = await partCollection.insertOne(product);
         res.send(result);
     })
+    
     app.get("/parts",async(req,res)=>{
         const query = req.query;
         const cursor = partCollection.find(query);
         const result = await cursor.toArray();
+        res.send(result);
+    })
+    app.delete("/parts/:id",async(req,res)=>{
+        const id = req.params.id;
+        const filter = {_id : ObjectId(id)};
+        const result = await partCollection.deleteOne(filter);
         res.send(result);
     })
     app.get("/parts/:id",async(req,res)=>{
@@ -125,7 +145,6 @@ async function run() {
         const filter = {email:email};
         const options = {upsert : true};
         const updation = req.body;
-        console.log(updation);
         const updateDoc = {
             $set:{
                 phone: updation.phone,
