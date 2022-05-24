@@ -4,6 +4,7 @@ const port = process.env.PORT || 5000;
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 
 //middlewares
@@ -25,6 +26,24 @@ async function run() {
     const partCollection = client.db('amrap').collection('parts');
     const orderCollection = client.db('amrap').collection('orders');
     const reviewCollection = client.db('amrap').collection('reviews');
+
+
+    app.post('/create-payment-intent',async(req,res)=>{
+        const order = req.body;
+        const price = order.price;
+       if(price){
+        const amount = (price*100);
+        console.log('order is',amount);
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount : amount,
+            currency: 'bdt',
+            payment_method_types:['card']
+          });
+        console.log('hey')
+        console.log(paymentIntent.client_secret);
+          res.send({clientSecret: paymentIntent.client_secret})
+       }
+    });
 
 
     app.get('/admin/:email',async(req,res)=>{
@@ -67,7 +86,24 @@ async function run() {
         const order = req.body;
         const result =await orderCollection.insertOne(order)
         res.send(result);
+    });
+    app.patch('/order/:id',async(req,res)=>{
+        const id = req.params.id;
+        const filter = {_id:ObjectId(id)};
+        const updateDoc = {
+            $set:{
+                payment:'true'
+            }
+        }
+        const result = await orderCollection.updateOne(filter,updateDoc);
+        res.send(result);
     })
+    app.get('/order/:id',async(req,res)=>{
+        const id = req.params.id;
+        const filter = {_id:ObjectId(id)};
+        const result = await orderCollection.findOne(filter);
+        res.send(result);
+    });
     app.post('/reviews',async(req,res)=>{
         const review = req.body;
         const result = await reviewCollection.insertOne(review);
