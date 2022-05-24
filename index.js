@@ -104,6 +104,23 @@ async function run() {
         const result = await orderCollection.findOne(filter);
         res.send(result);
     });
+    app.patch('/order/proceed/:id',async(req,res)=>{
+        console.log('patch patch')
+        const id = req.params.id;
+        const filter = {_id:ObjectId(id)};
+        const updateDoc = {
+            $set:{
+                shipped:true,
+            }
+        }
+        const result = await orderCollection.updateOne(filter,updateDoc);
+        res.send(result);
+    });
+    app.get('/orders',async(req,res)=>{
+        const cursor =  orderCollection.find({});
+        const result = await cursor.toArray();
+        res.send(result);
+    });
     app.post('/reviews',async(req,res)=>{
         const review = req.body;
         const result = await reviewCollection.insertOne(review);
