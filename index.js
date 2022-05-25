@@ -22,6 +22,7 @@ const verifyJWT = (req,res,next)=>{
             return res.status(403).send({message:"Forbidden Access"});
         }
         req.decoded = decoded;
+        console.log('jwt')
         next();
       });
 
@@ -49,7 +50,7 @@ async function run() {
             next();
         }
         else{
-            res.status(403).send({message:"forbidden"});
+            res.status(403).send({message:"forbidden admin access only"});
         }
     }
     app.post('/create-payment-intent',async(req,res)=>{
@@ -160,7 +161,7 @@ async function run() {
         res.send(result);
     })
    
-    app.delete('/orders/:id',verifyJWT,verifyAdmin,async(req,res)=>{
+    app.delete('/orders/:id',async(req,res)=>{
         const id = req.params.id;
         const filter = {_id : ObjectId(id)};
         const result = await orderCollection.deleteOne(filter);
